@@ -53,6 +53,7 @@ const scrapeJobMatrix = async () => {
                 location: country,
                 resultsWanted: 20,
                 hoursOld: 24,
+                easyApply: true,
                 countryIndeed: preferenceMatrix.country[country as keyof typeof preferenceMatrix.country],
             });
             allJobs = allJobs.concat(cleanJobs(jobs));

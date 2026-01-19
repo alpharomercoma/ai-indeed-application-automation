@@ -1,6 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
@@ -37,7 +36,7 @@ async function aiProcessJobs(jobs: any[]) {
             config: {
                 cachedContent: cache.name,
                 responseMimeType: "application/json",
-                responseJsonSchema: zodToJsonSchema(generatedSchema),
+                responseJsonSchema: generatedSchema,
             }
         });
         const matchResult = JSON.parse(response.text ?? '{}');
