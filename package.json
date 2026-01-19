@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "apply": "tsx src/api/cron/run.ts",
-    "apply:test": "tsx src/api/cron/apply.ts"
+    "apply:test": "tsx src/api/cron/test-run.ts"
   },
   "dependencies": {
     "@google/genai": "^1.37.0",

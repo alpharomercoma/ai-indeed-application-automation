@@ -43,24 +43,45 @@ function cleanJobs(jobList: any[]) {
     });
 }
 
-const scrapeJobMatrix = async () => {
+const scrapeJobMatrix = async (maxJobs: number = 2) => {
     let allJobs: any[] = [];
-    for (const country of Object.keys(preferenceMatrix.country)) {
-        for (const term of preferenceMatrix.searchTerm) {
-            const jobs = await scrapeJobs({
-                siteName: ['indeed'],
-                searchTerm: term,
-                location: country,
-                resultsWanted: 20,
-                hoursOld: 24,
-                easyApply: true,
-                countryIndeed: preferenceMatrix.country[country as keyof typeof preferenceMatrix.country],
-            });
-            allJobs = allJobs.concat(cleanJobs(jobs));
+
+    // For testing, only search first country and first search term
+    const countries = Object.keys(preferenceMatrix.country).slice(0, 1);
+    const searchTerms = preferenceMatrix.searchTerm.slice(0, 1);
+
+    for (const country of countries) {
+        for (const term of searchTerms) {
+            console.log(`Searching for "${term}" in ${country}...`);
+            try {
+                const jobs = await scrapeJobs({
+                    siteName: ['indeed'],
+                    searchTerm: term,
+                    location: country,
+                    resultsWanted: maxJobs * 2, // Get more jobs to account for filtering
+                    hoursOld: 168, // 1 week
+                    easyApply: false, // Don't filter by easy apply to get more results
+                    countryIndeed: preferenceMatrix.country[country as keyof typeof preferenceMatrix.country],
+                });
+                console.log(`Found ${jobs.length} raw jobs`);
+                allJobs = allJobs.concat(cleanJobs(jobs));
+
+                // Stop if we have enough jobs
+                if (allJobs.length >= maxJobs) {
+                    break;
+                }
+            } catch (error) {
+                console.error(`Error scraping ${term} in ${country}:`, error);
+            }
+        }
+        if (allJobs.length >= maxJobs) {
+            break;
         }
     }
-    // deduplicate based on id
-    return Array.from(new Map(allJobs.map(job => [job.id, job])).values());
+
+    // Deduplicate based on id and limit to maxJobs
+    const uniqueJobs = Array.from(new Map(allJobs.map(job => [job.id, job])).values());
+    return uniqueJobs.slice(0, maxJobs);
 };
 
 export { scrapeJobMatrix };

@@ -1,13 +1,23 @@
 import { BrowserUseClient } from "browser-use-sdk";
 
-const BROWSER_USE_API_KEY = process.env.BROWSER_USE_API_KEY;
-const BROWSER_PROFILE_ID = process.env.BROWSER_PROFILE_ID;
-const client = new BrowserUseClient({
-    apiKey: BROWSER_USE_API_KEY,
-});
-
 async function applyToJobs(jobs: any[], waitForCompletion = false) {
     console.log(`\n🚀 Starting job application process for ${jobs.length} job(s)...\n`);
+
+    // Initialize client here to ensure environment variables are loaded
+    const BROWSER_USE_API_KEY = process.env.BROWSER_USE_API_KEY;
+    const BROWSER_PROFILE_ID = process.env.BROWSER_PROFILE_ID;
+
+    if (!BROWSER_USE_API_KEY) {
+        throw new Error('BROWSER_USE_API_KEY environment variable is not set');
+    }
+    if (!BROWSER_PROFILE_ID) {
+        throw new Error('BROWSER_PROFILE_ID environment variable is not set');
+    }
+
+    const client = new BrowserUseClient({
+        apiKey: BROWSER_USE_API_KEY,
+    });
+
     console.log(`🔑 Using browser profile: ${BROWSER_PROFILE_ID}`);
     console.log(`💡 This profile has Indeed cookies, so you should already be logged in!\n`);
 
