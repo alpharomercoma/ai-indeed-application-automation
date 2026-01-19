@@ -1,7 +1,7 @@
+import dotenv from 'dotenv';
 import { aiProcessJobs } from './ai';
 import applyToJobs from './apply';
 import { mockJobs } from './test-data';
-import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();

@@ -14,7 +14,6 @@ const preferenceMatrix = {
         Philippines: "PH",
     },
     searchTerm: ["software engineer", "full-stack developer", "AI Engineer"],
-
 };
 
 function cleanJobs(jobList: any[]) {
@@ -43,45 +42,44 @@ function cleanJobs(jobList: any[]) {
     });
 }
 
-const scrapeJobMatrix = async (maxJobs: number = 2) => {
+const scrapeJobMatrix = async (resultsPerSearch: number = 10) => {
     let allJobs: any[] = [];
 
-    // For testing, only search first country and first search term
-    const countries = Object.keys(preferenceMatrix.country).slice(0, 1);
-    const searchTerms = preferenceMatrix.searchTerm.slice(0, 1);
+    // Search all countries and search terms from preference matrix
+    const countries = Object.keys(preferenceMatrix.country);
+    const searchTerms = preferenceMatrix.searchTerm;
 
     for (const country of countries) {
         for (const term of searchTerms) {
             console.log(`Searching for "${term}" in ${country}...`);
             try {
+                const countryCode = preferenceMatrix.country[country as keyof typeof preferenceMatrix.country];
+                console.log(`  Using country code: ${countryCode}`);
                 const jobs = await scrapeJobs({
-                    siteName: ['indeed'],
+                    siteName: 'indeed',
                     searchTerm: term,
-                    location: country,
-                    resultsWanted: maxJobs * 2, // Get more jobs to account for filtering
-                    hoursOld: 168, // 1 week
-                    easyApply: false, // Don't filter by easy apply to get more results
-                    countryIndeed: preferenceMatrix.country[country as keyof typeof preferenceMatrix.country],
+                    location: '', // Leave empty to search nationwide
+                    resultsWanted: resultsPerSearch,
+                    hoursOld: 24, // 3 days to get more results
+                    easyApply: true, // Don't filter by easy apply to get more results
+                    countryIndeed: countryCode,
                 });
                 console.log(`Found ${jobs.length} raw jobs`);
                 allJobs = allJobs.concat(cleanJobs(jobs));
-
-                // Stop if we have enough jobs
-                if (allJobs.length >= maxJobs) {
-                    break;
-                }
             } catch (error) {
                 console.error(`Error scraping ${term} in ${country}:`, error);
+                if (error instanceof Error) {
+                    console.error(`  Error message: ${error.message}`);
+                    console.error(`  Error stack: ${error.stack}`);
+                }
             }
-        }
-        if (allJobs.length >= maxJobs) {
-            break;
         }
     }
 
-    // Deduplicate based on id and limit to maxJobs
+    // Deduplicate based on id
     const uniqueJobs = Array.from(new Map(allJobs.map(job => [job.id, job])).values());
-    return uniqueJobs.slice(0, maxJobs);
+    console.log(`Total unique jobs after deduplication: ${uniqueJobs.length}`);
+    return uniqueJobs;
 };
 
 export { scrapeJobMatrix };

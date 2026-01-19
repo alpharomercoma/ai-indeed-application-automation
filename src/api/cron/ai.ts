@@ -1,10 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { z } from "zod";
 
-const systemInstruction = `
-You are an expert job matching AI. Given a job description and a user's preferences, determine if the job meets the user's preferences.
-`;
-
 const generatedSchema = z.object({
     matchesPreferences: z.boolean().describe("Indicates if the job matches the user's preferences"),
     reasoning: z.string().describe("Explanation of why the job matches or does not match the user's preferences")
@@ -59,7 +55,7 @@ Based on the user's preferences, does this job match? Respond with a JSON object
 
         // This runs one by one. Slower, but won't crash the API.
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.5-flash-lite',
             contents: [prompt],
             config: {
                 responseJsonSchema: generatedSchema,
