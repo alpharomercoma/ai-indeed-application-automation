@@ -26,7 +26,7 @@ async function applyToJobs(jobs: any[], waitForCompletion = false) {
     const session = await client.sessions.createSession({
         profileId: BROWSER_PROFILE_ID,
         persistMemory: true,
-        proxyCountryCode: 'ph', // Use Philippines residential proxy to avoid Cloudflare
+        proxyCountryCode: "us", // Use Philippines residential proxy to avoid Cloudflare
     });
     const sessionId = session.id;
     console.log(`✅ Session created: ${sessionId}`);
@@ -40,23 +40,52 @@ async function applyToJobs(jobs: any[], waitForCompletion = false) {
 
 
     function getNextWeekDates() {
-        const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        const today = new Date();
+        const dayOfWeek = today.getDay(); // 0 = Sunday, 3 = Wednesday, 5 = Friday
+
+        // Calculate days until next Wednesday (day 3)
+        const daysUntilWed = (3 - dayOfWeek + 7) % 7 || 7; // If today is Wed, get next Wed
+        const nextWed = new Date(today);
+        nextWed.setDate(today.getDate() + daysUntilWed);
+
+        // Calculate days until next Friday (day 5)
+        const daysUntilFri = (5 - dayOfWeek + 7) % 7 || 7; // If today is Fri, get next Fri
+        const nextFri = new Date(today);
+        nextFri.setDate(today.getDate() + daysUntilFri);
+
+        // Format dates nicely (e.g., "Wednesday, January 29, 2026")
+        const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         const timeRange = '5PM to 9PM PH time';
-        const tuesday = `${new Date(nextWeek.setDate(nextWeek.getDate() + 1))}` + ' ' + timeRange;
-        const wednesday = `${new Date(nextWeek.setDate(nextWeek.getDate() + 2))}` + ' ' + timeRange;
-        return { tuesday, wednesday };
+
+        const wednesday = `${nextWed.toLocaleDateString('en-US', options)} ${timeRange}`;
+        const friday = `${nextFri.toLocaleDateString('en-US', options)} ${timeRange}`;
+        return { wednesday, friday };
     }
     const comprehensiveTask = `
 You need to apply to multiple jobs on Indeed. You should already be logged in via saved cookies.
 
-IMPORTANT - CLOUDFLARE HANDLING:
-- If you encounter a Cloudflare verification page, WAIT for it to complete automatically
-- Do NOT click any buttons on the Cloudflare page
-- The verification should complete within 5-10 seconds
+CRITICAL - CLOUDFLARE VERIFICATION HANDLING:
+When you see "Additional Verification Required" or any Cloudflare challenge page:
+1. DO NOT click any buttons immediately
+2. WAIT 15-30 seconds for the page to process automatically
+3. If you see a checkbox like "Verify you are human", wait 5 seconds then click it ONCE
+4. After clicking, wait another 15-30 seconds for verification to complete
+5. If the page shows "Return home" button, wait first - only click it if verification completed
+6. If stuck on Cloudflare for more than 60 seconds, try refreshing the page ONCE
+7. If still blocked after refresh, skip this job and move to the next one
+8. NEVER rapidly click or interact with Cloudflare pages - slow and patient is key
+
+HUMAN-LIKE BROWSING BEHAVIOR:
+- Move the mouse naturally and slowly between elements
+- Wait 2-3 seconds between page loads
+- Scroll down pages slowly as a human would
+- Don't navigate too quickly between pages
+- Add small random pauses (1-3 seconds) between actions
 
 STEP 1: VERIFY LOGIN STATUS
 - Go to https://www.indeed.com
-- Wait for any Cloudflare verification to complete
+- Wait for any Cloudflare verification to complete (up to 30 seconds)
+- If blocked by Cloudflare, follow the handling steps above
 - Check if you're already logged in (look for your account name or profile icon)
 - If you see you're logged in, proceed to applying for jobs
 - If NOT logged in, go to login page and sign in with Google
@@ -68,20 +97,23 @@ ${jobList}
 
 For each job:
 1. Navigate to the job URL
-2. Wait for Cloudflare verification if it appears (usually 5-10 seconds)
-3. Look for and click the "Apply" or "Apply now" button
-4. Fill out any required application fields using autofill where available
-5. If file upload is required (resume, cover letter), note that you cannot upload and skip this job
-6. If the form is simple (no file uploads), submit the application
-7. Confirm the application was submitted successfully
-8. Move to the next job
+2. Wait for page to fully load (wait 3-5 seconds)
+3. If Cloudflare appears, follow the CLOUDFLARE HANDLING steps above patiently
+4. Once on the job page, scroll down slowly to read the job details
+5. Look for and click the "Apply" or "Apply now" button
+6. Fill out any required application fields using autofill where available
+7. If file upload is required (resume, cover letter), note that you cannot upload and skip this job
+8. If the form is simple (no file uploads), submit the application
+9. Wait for confirmation that application was submitted
+10. Wait 3-5 seconds before moving to the next job
 
 IMPORTANT:
-- Always wait for Cloudflare verifications to complete automatically
+- BE PATIENT with Cloudflare - rushing causes more blocks
+- If a job keeps getting blocked by Cloudflare after 2 attempts, skip it and move on
 - Stay logged in throughout the entire process
 - Skip jobs that require file uploads or complex multi-page forms
 - Complete as many ${jobs.length} applications as possible
-- Report the status of each job application (submitted, skipped, error)
+- Report the status of each job application (submitted, skipped, blocked by Cloudflare, error)
 - Don't apply to jobs in the home page. Only apply to the specific jobs you are given.
 
 APPLICATION INFORMATION:
@@ -91,7 +123,7 @@ Use the following information if needed to apply to the job.
 - Able to start working immediately
 - Able to work remotely
 - Able to work full-time/part-time
-- Only available on ${getNextWeekDates().tuesday} and ${getNextWeekDates().wednesday}
+- Only available on ${getNextWeekDates().wednesday} and ${getNextWeekDates().friday}
 `;
     console.log(`📋 Creating task to apply to ${jobs.length} jobs...`);
 
