@@ -38,6 +38,14 @@ async function applyToJobs(jobs: any[], waitForCompletion = false) {
     const jobUrls = jobs.map(job => job.jobUrl);
     const jobList = jobUrls.map((url, idx) => `${idx + 1}. ${url}`).join('\n');
 
+
+    function getNextWeekDates() {
+        const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        const timeRange = '5PM to 9PM PH time';
+        const tuesday = `${new Date(nextWeek.setDate(nextWeek.getDate() + 1))}` + ' ' + timeRange;
+        const wednesday = `${new Date(nextWeek.setDate(nextWeek.getDate() + 2))}` + ' ' + timeRange;
+        return { tuesday, wednesday };
+    }
     const comprehensiveTask = `
 You need to apply to multiple jobs on Indeed. You should already be logged in via saved cookies.
 
@@ -74,8 +82,17 @@ IMPORTANT:
 - Skip jobs that require file uploads or complex multi-page forms
 - Complete as many ${jobs.length} applications as possible
 - Report the status of each job application (submitted, skipped, error)
-`;
+- Don't apply to jobs in the home page. Only apply to the specific jobs you are given.
 
+APPLICATION INFORMATION:
+Use the following information if needed to apply to the job.
+- 3 years of AI/ML Experience
+- 4 years of Software Engineering Experience
+- Able to start working immediately
+- Able to work remotely
+- Able to work full-time/part-time
+- Only available on ${getNextWeekDates().tuesday} and ${getNextWeekDates().wednesday}
+`;
     console.log(`📋 Creating task to apply to ${jobs.length} jobs...`);
 
     const task = await client.tasks.createTask({
@@ -144,3 +161,40 @@ IMPORTANT:
 }
 
 export default applyToJobs;
+
+// Main execution when run directly
+if (require.main === module) {
+    import('dotenv').then(dotenv => {
+        dotenv.config();
+
+        // Import dependencies
+        return Promise.all([
+            import('./scrape'),
+            import('./ai')
+        ]);
+    }).then(([{ scrapeJobMatrix }, { aiProcessJobs }]) => {
+        console.log('🚀 Starting full job application workflow...\n');
+
+        // Run the full workflow
+        return scrapeJobMatrix(1).then(jobs => {
+            console.log(`✅ Scraped ${jobs.length} jobs\n`);
+            return aiProcessJobs(jobs);
+        }).then(aiFilteredJobs => {
+            console.log(`✅ AI filtered to ${aiFilteredJobs.length} matching jobs\n`);
+
+            if (aiFilteredJobs.length === 0) {
+                console.log('❌ No jobs matched user preferences');
+                return;
+            }
+
+            const jobsToApply = aiFilteredJobs.map(item => item.job);
+            return applyToJobs(jobsToApply, true);
+        }).then(results => {
+            console.log('\n✅ Workflow completed!');
+            console.log('📊 Results:', results);
+        });
+    }).catch(error => {
+        console.error('\n❌ Error in workflow:', error);
+        process.exit(1);
+    });
+}
