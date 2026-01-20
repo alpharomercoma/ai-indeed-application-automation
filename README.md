@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Indeed Job Application Automation
 
-## Getting Started
+Automated job application system that scrapes Indeed listings, filters them using AI, and auto-applies to matching jobs.
 
-First, run the development server:
+## How It Works
+
+1. **Scrape** - Fetches job listings from Indeed (remote, easy-apply jobs)
+2. **Filter** - Uses Gemini AI to match jobs against your preferences
+3. **Apply** - Uses Browser-Use SDK to automatically submit applications
+
+## Quick Start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env  # Configure your credentials
+npm install
+npm run apply:test    # Test with mock data
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Configuration
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env` file with:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+GEMINI_API_KEY=your_gemini_api_key
+BROWSER_USE_API_KEY=your_browser_use_api_key
+BROWSER_PROFILE_ID=your_browser_profile_id
+USER_PREFERENCES="I am looking for remote software engineering positions..."
+```
 
-## Learn More
+## Commands
 
-To learn more about Next.js, take a look at the following resources:
+| Command | Description |
+|---------|-------------|
+| `npm run apply:test` | Test with mock data (safe) |
+| `npm run apply` | Run full pipeline with real scraping |
+| `npm run dev` | Start Next.js dev server |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Deploy to Vercel for automated daily job applications:
 
-## Deploy on Vercel
+```bash
+vercel --prod
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The cron job runs daily at 9 AM UTC. Configure the schedule in `vercel.json`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Project Structure
+
+```
+src/
+├── api/cron/
+│   ├── scrape.ts      # Job scraping from Indeed
+│   ├── ai.ts          # Gemini AI job matching
+│   └── apply.ts       # Browser automation
+├── app/api/cron/
+│   └── route.ts       # Vercel cron endpoint
+docs/
+├── SETUP.md           # Full setup instructions
+└── COMMANDS.md        # Command reference
+```
+
+## Documentation
+
+- [Setup Guide](docs/SETUP.md) - Full configuration and deployment instructions
+- [Commands Reference](docs/COMMANDS.md) - All available commands
+
+## Tech Stack
+
+- **Next.js** - Web framework & API routes
+- **ts-jobspy** - Indeed job scraping
+- **Gemini AI** - Job matching & filtering
+- **Browser-Use SDK** - Browser automation for applications
+- **Vercel** - Hosting & cron jobs
+
+## License
+
+MIT
