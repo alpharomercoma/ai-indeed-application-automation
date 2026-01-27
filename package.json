@@ -14,7 +14,7 @@
     "@google/genai": "^1.37.0",
     "browser-use-sdk": "^2.0.13",
     "dotenv": "^17.2.3",
-    "next": "16.1.3",
+    "next": "16.1.5",
     "playwright": "^1.57.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
